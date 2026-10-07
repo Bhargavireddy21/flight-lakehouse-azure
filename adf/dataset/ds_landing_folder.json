@@ -1,0 +1,18 @@
+{
+  "name": "ds_landing_folder",
+  "properties": {
+    "description": "Folder in the landing container. Files are written as-is.",
+    "linkedServiceName": { "referenceName": "ls_adls", "type": "LinkedServiceReference" },
+    "parameters": {
+      "folderPath": { "type": "string" }
+    },
+    "type": "Binary",
+    "typeProperties": {
+      "location": {
+        "type": "AzureBlobFSLocation",
+        "fileSystem": "landing",
+        "folderPath": { "value": "@dataset().folderPath", "type": "Expression" }
+      }
+    }
+  }
+}

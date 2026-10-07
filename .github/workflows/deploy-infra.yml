@@ -1,0 +1,32 @@
+# Optional. Deploys infra/main.bicep from GitHub instead of from your laptop.
+# Runs only when started by hand. Needs a repository secret AZURE_CREDENTIALS containing the output of:
+#   az ad sp create-for-rbac --name gh-flightlake --role Owner --scopes /subscriptions/<SUB_ID>/resourceGroups/rg-flightlake --json-auth
+# (Owner on the resource group, because the template creates role assignments.)
+name: Deploy infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      resource_group:
+        description: Existing resource group
+        default: rg-flightlake
+        required: true
+      prefix:
+        description: Resource name prefix
+        default: flk
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Deploy Bicep
+        run: |
+          az deployment group create \
+            --resource-group "${{ inputs.resource_group }}" \
+            --template-file infra/main.bicep \
+            --parameters prefix="${{ inputs.prefix }}"

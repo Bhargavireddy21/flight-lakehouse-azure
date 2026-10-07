@@ -1,0 +1,12 @@
+{
+  "name": "ls_http_bts",
+  "properties": {
+    "description": "US Bureau of Transportation Statistics download site (public, no login).",
+    "type": "HttpServer",
+    "typeProperties": {
+      "url": "https://transtats.bts.gov/",
+      "enableServerCertificateValidation": true,
+      "authenticationType": "Anonymous"
+    }
+  }
+}

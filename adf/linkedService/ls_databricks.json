@@ -1,0 +1,11 @@
+{
+  "name": "ls_databricks",
+  "properties": {
+    "description": "Runs notebooks on an existing cluster. Replace the two REPLACE_ values, then paste the access token in the Data Factory UI. The token is never stored in Git.",
+    "type": "AzureDatabricks",
+    "typeProperties": {
+      "domain": "https://REPLACE_WORKSPACE_URL.azuredatabricks.net",
+      "existingClusterId": "REPLACE_CLUSTER_ID"
+    }
+  }
+}

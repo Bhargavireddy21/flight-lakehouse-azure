@@ -1,0 +1,102 @@
+{
+  "name": "pl_flights_batch",
+  "properties": {
+    "description": "Download monthly BTS flight files, unzip into the landing zone, then run bronze -> silver -> gold on Databricks.",
+    "parameters": {
+      "year": { "type": "int", "defaultValue": 2024 },
+      "months": { "type": "array", "defaultValue": [1, 2, 3] },
+      "catalog": { "type": "string", "defaultValue": "flightlake" },
+      "notebookFolder": {
+        "type": "string",
+        "defaultValue": "/Users/REPLACE_YOUR_EMAIL/flight-lakehouse-azure/notebooks"
+      }
+    },
+    "activities": [
+      {
+        "name": "ForEachMonth",
+        "type": "ForEach",
+        "typeProperties": {
+          "items": { "value": "@pipeline().parameters.months", "type": "Expression" },
+          "isSequential": false,
+          "batchCount": 3,
+          "activities": [
+            {
+              "name": "CopyAndUnzipMonth",
+              "type": "Copy",
+              "policy": { "timeout": "0.01:00:00", "retry": 2, "retryIntervalInSeconds": 60 },
+              "typeProperties": {
+                "source": {
+                  "type": "BinarySource",
+                  "storeSettings": { "type": "HttpReadSettings", "requestMethod": "GET" },
+                  "formatSettings": {
+                    "type": "BinaryReadSettings",
+                    "compressionProperties": { "type": "ZipDeflateReadSettings", "preserveZipFileNameAsFolder": false }
+                  }
+                },
+                "sink": {
+                  "type": "BinarySink",
+                  "storeSettings": { "type": "AzureBlobFSWriteSettings" }
+                }
+              },
+              "inputs": [
+                {
+                  "referenceName": "ds_bts_zip",
+                  "type": "DatasetReference",
+                  "parameters": {
+                    "year": { "value": "@string(pipeline().parameters.year)", "type": "Expression" },
+                    "month": { "value": "@string(item())", "type": "Expression" }
+                  }
+                }
+              ],
+              "outputs": [
+                {
+                  "referenceName": "ds_landing_folder",
+                  "type": "DatasetReference",
+                  "parameters": {
+                    "folderPath": {
+                      "value": "@concat('raw/flights/year=', string(pipeline().parameters.year), '/month=', string(item()))",
+                      "type": "Expression"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "Bronze",
+        "type": "DatabricksNotebook",
+        "dependsOn": [ { "activity": "ForEachMonth", "dependencyConditions": [ "Succeeded" ] } ],
+        "policy": { "timeout": "0.02:00:00", "retry": 0 },
+        "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
+        "typeProperties": {
+          "notebookPath": { "value": "@concat(pipeline().parameters.notebookFolder, '/01_bronze_ingest')", "type": "Expression" },
+          "baseParameters": { "catalog": { "value": "@pipeline().parameters.catalog", "type": "Expression" } }
+        }
+      },
+      {
+        "name": "Silver",
+        "type": "DatabricksNotebook",
+        "dependsOn": [ { "activity": "Bronze", "dependencyConditions": [ "Succeeded" ] } ],
+        "policy": { "timeout": "0.02:00:00", "retry": 0 },
+        "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
+        "typeProperties": {
+          "notebookPath": { "value": "@concat(pipeline().parameters.notebookFolder, '/02_silver_transform')", "type": "Expression" },
+          "baseParameters": { "catalog": { "value": "@pipeline().parameters.catalog", "type": "Expression" } }
+        }
+      },
+      {
+        "name": "Gold",
+        "type": "DatabricksNotebook",
+        "dependsOn": [ { "activity": "Silver", "dependencyConditions": [ "Succeeded" ] } ],
+        "policy": { "timeout": "0.02:00:00", "retry": 0 },
+        "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
+        "typeProperties": {
+          "notebookPath": { "value": "@concat(pipeline().parameters.notebookFolder, '/03_gold_star_schema')", "type": "Expression" },
+          "baseParameters": { "catalog": { "value": "@pipeline().parameters.catalog", "type": "Expression" } }
+        }
+      }
+    ]
+  }
+}

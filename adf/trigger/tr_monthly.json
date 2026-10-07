@@ -1,0 +1,20 @@
+{
+  "name": "tr_monthly",
+  "properties": {
+    "description": "Monthly schedule. Left Stopped on purpose so it does not spend credit. Start it in the Data Factory UI to show scheduling.",
+    "runtimeState": "Stopped",
+    "pipelines": [
+      { "pipelineReference": { "referenceName": "pl_flights_batch", "type": "PipelineReference" } }
+    ],
+    "type": "ScheduleTrigger",
+    "typeProperties": {
+      "recurrence": {
+        "frequency": "Month",
+        "interval": 1,
+        "startTime": "2026-11-05T06:00:00Z",
+        "timeZone": "UTC",
+        "schedule": { "monthDays": [5], "hours": [6], "minutes": [0] }
+      }
+    }
+  }
+}
