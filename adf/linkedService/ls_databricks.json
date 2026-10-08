@@ -1,11 +1,10 @@
 {
   "name": "ls_databricks",
   "properties": {
-    "description": "Runs notebooks on an existing cluster. Replace the two REPLACE_ values, then paste the access token in the Data Factory UI. The token is never stored in Git.",
+    "description": "Runs the flightlake_batch Databricks job on serverless compute, so no cluster is configured here. Paste an access token in the Data Factory UI. The token is never stored in Git.",
     "type": "AzureDatabricks",
     "typeProperties": {
-      "domain": "https://REPLACE_WORKSPACE_URL.azuredatabricks.net",
-      "existingClusterId": "REPLACE_CLUSTER_ID"
+      "domain": "https://adb-7405610978157277.17.azuredatabricks.net"
     }
   }
 }

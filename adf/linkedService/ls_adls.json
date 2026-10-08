@@ -1,10 +1,10 @@
 {
   "name": "ls_adls",
   "properties": {
-    "description": "Data lake. Authenticates with the Data Factory managed identity (role granted in infra/main.bicep). Replace REPLACE_STORAGE_ACCOUNT.",
+    "description": "Data lake. Authenticates with the Data Factory managed identity (role granted in infra/main.bicep).",
     "type": "AzureBlobFS",
     "typeProperties": {
-      "url": "https://REPLACE_STORAGE_ACCOUNT.dfs.core.windows.net"
+      "url": "https://stflkn3rba5poenzy4.dfs.core.windows.net"
     }
   }
 }

@@ -1,15 +1,12 @@
 {
   "name": "pl_flights_batch",
   "properties": {
-    "description": "Download monthly BTS flight files, unzip into the landing zone, then run bronze -> silver -> gold on Databricks.",
+    "description": "Download monthly BTS flight files, unzip into the landing zone, then run the Databricks job that does bronze -> silver -> gold.",
     "parameters": {
       "year": { "type": "int", "defaultValue": 2024 },
       "months": { "type": "array", "defaultValue": [1, 2, 3] },
       "catalog": { "type": "string", "defaultValue": "flightlake" },
-      "notebookFolder": {
-        "type": "string",
-        "defaultValue": "/Users/REPLACE_YOUR_EMAIL/flight-lakehouse-azure/notebooks"
-      }
+      "databricksJobId": { "type": "string", "defaultValue": "765257277251200" }
     },
     "activities": [
       {
@@ -65,36 +62,15 @@
         }
       },
       {
-        "name": "Bronze",
-        "type": "DatabricksNotebook",
+        "name": "BronzeSilverGold",
+        "description": "Runs the flightlake_batch job (databricks/job_flights_batch.json): bronze -> silver -> gold on serverless compute.",
+        "type": "DatabricksJob",
         "dependsOn": [ { "activity": "ForEachMonth", "dependencyConditions": [ "Succeeded" ] } ],
         "policy": { "timeout": "0.02:00:00", "retry": 0 },
         "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
         "typeProperties": {
-          "notebookPath": { "value": "@concat(pipeline().parameters.notebookFolder, '/01_bronze_ingest')", "type": "Expression" },
-          "baseParameters": { "catalog": { "value": "@pipeline().parameters.catalog", "type": "Expression" } }
-        }
-      },
-      {
-        "name": "Silver",
-        "type": "DatabricksNotebook",
-        "dependsOn": [ { "activity": "Bronze", "dependencyConditions": [ "Succeeded" ] } ],
-        "policy": { "timeout": "0.02:00:00", "retry": 0 },
-        "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
-        "typeProperties": {
-          "notebookPath": { "value": "@concat(pipeline().parameters.notebookFolder, '/02_silver_transform')", "type": "Expression" },
-          "baseParameters": { "catalog": { "value": "@pipeline().parameters.catalog", "type": "Expression" } }
-        }
-      },
-      {
-        "name": "Gold",
-        "type": "DatabricksNotebook",
-        "dependsOn": [ { "activity": "Silver", "dependencyConditions": [ "Succeeded" ] } ],
-        "policy": { "timeout": "0.02:00:00", "retry": 0 },
-        "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
-        "typeProperties": {
-          "notebookPath": { "value": "@concat(pipeline().parameters.notebookFolder, '/03_gold_star_schema')", "type": "Expression" },
-          "baseParameters": { "catalog": { "value": "@pipeline().parameters.catalog", "type": "Expression" } }
+          "jobId": { "value": "@pipeline().parameters.databricksJobId", "type": "Expression" },
+          "jobParameters": { "catalog": { "value": "@pipeline().parameters.catalog", "type": "Expression" } }
         }
       }
     ]

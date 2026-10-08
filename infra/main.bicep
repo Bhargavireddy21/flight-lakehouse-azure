@@ -114,5 +114,6 @@ resource ehRule 'Microsoft.EventHub/namespaces/eventhubs/authorizationRules@2021
 output storageAccountName string = storage.name
 output dataFactoryName string = adf.name
 output databricksWorkspaceUrl string = 'https://${databricks.properties.workspaceUrl}'
+output databricksWorkspaceId string = databricks.id
 output accessConnectorId string = accessConnector.id
 output eventHubNamespace string = deployEventHub ? ehNamespace.name : ''
