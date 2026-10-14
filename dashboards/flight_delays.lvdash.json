@@ -1,0 +1,408 @@
+{
+  "datasets": [
+    {
+      "name": "flights",
+      "displayName": "Flights (gold star schema)",
+      "queryLines": [
+        "SELECT d.date, d.month, d.month_name, c.carrier_name, f.origin_airport_code AS origin_airport, f.crs_dep_hour,\n",
+        "       CASE WHEN f.is_cancelled THEN 100.0 ELSE 0.0 END AS cancelled_pct,\n",
+        "       CASE WHEN f.arr_delay_min IS NULL THEN NULL WHEN f.is_arr_delayed_15 THEN 0.0 ELSE 100.0 END AS on_time_pct,\n",
+        "       f.arr_delay_min\n",
+        "FROM flightlake.gold.fact_flights f\n",
+        "JOIN flightlake.gold.dim_date d ON f.date_key = d.date_key\n",
+        "JOIN flightlake.gold.dim_carrier c ON f.carrier_code = c.carrier_code\n"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "overview",
+      "displayName": "On-time performance, Q1 2024",
+      "layout": [
+        {
+          "widget": {
+            "name": "filter_carrier",
+            "queries": [
+              {
+                "name": "filter_carrier_q",
+                "query": {
+                  "datasetName": "flights",
+                  "fields": [
+                    {
+                      "name": "carrier_name",
+                      "expression": "`carrier_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "carrier_name",
+                    "displayName": "Carrier",
+                    "queryName": "filter_carrier_q"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Carrier"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_month",
+            "queries": [
+              {
+                "name": "filter_month_q",
+                "query": {
+                  "datasetName": "flights",
+                  "fields": [
+                    {
+                      "name": "month_name",
+                      "expression": "`month_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "month_name",
+                    "displayName": "Month",
+                    "queryName": "filter_month_q"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Month"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_flights",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "flights",
+                  "fields": [
+                    {
+                      "name": "flights",
+                      "expression": "COUNT(`carrier_name`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "flights",
+                  "displayName": "Flights"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Flights"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_on_time",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "flights",
+                  "fields": [
+                    {
+                      "name": "on_time_pct",
+                      "expression": "AVG(`on_time_pct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "on_time_pct",
+                  "displayName": "On-time % (arrived flights)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "On-time % (arrived flights)"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_cancel",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "flights",
+                  "fields": [
+                    {
+                      "name": "cancelled_pct",
+                      "expression": "AVG(`cancelled_pct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "cancelled_pct",
+                  "displayName": "Cancelled %"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Cancelled %"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "line_on_time",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "flights",
+                  "fields": [
+                    {
+                      "name": "day",
+                      "expression": "DATE_TRUNC(\"DAY\", `date`)"
+                    },
+                    {
+                      "name": "on_time_pct",
+                      "expression": "AVG(`on_time_pct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "day",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Date"
+                },
+                "y": {
+                  "fieldName": "on_time_pct",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "On-time %"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "On-time % by day"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_carrier_delay",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "flights",
+                  "fields": [
+                    {
+                      "name": "carrier_name",
+                      "expression": "`carrier_name`"
+                    },
+                    {
+                      "name": "avg_arr_delay",
+                      "expression": "AVG(`arr_delay_min`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "avg_arr_delay",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Avg arrival delay (min)"
+                },
+                "y": {
+                  "fieldName": "carrier_name",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  },
+                  "displayName": "Carrier"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Average arrival delay by carrier"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 3,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "pivot_airport_hour",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "flights",
+                  "fields": [
+                    {
+                      "name": "origin_airport",
+                      "expression": "`origin_airport`"
+                    },
+                    {
+                      "name": "crs_dep_hour",
+                      "expression": "`crs_dep_hour`"
+                    },
+                    {
+                      "name": "flights",
+                      "expression": "COUNT(`carrier_name`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pivot",
+              "encodings": {
+                "rows": [
+                  {
+                    "fieldName": "origin_airport",
+                    "displayName": "Origin airport"
+                  }
+                ],
+                "columns": [
+                  {
+                    "fieldName": "crs_dep_hour",
+                    "displayName": "Scheduled departure hour"
+                  }
+                ],
+                "cell": {
+                  "type": "multi-cell",
+                  "fields": [
+                    {
+                      "fieldName": "flights",
+                      "cellType": "text",
+                      "displayName": "Flights"
+                    }
+                  ]
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Flights by origin airport and departure hour"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 11,
+            "width": 3,
+            "height": 8
+          }
+        }
+      ]
+    }
+  ]
+}
